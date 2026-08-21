@@ -4,21 +4,20 @@
     <meta charset="UTF-8">
     <title>Трансляция экрана аккаунта</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
     <style>
         body { background: #0f0f0f; color: #fff; font-family: sans-serif; text-align: center; margin: 0; padding: 15px; }
         #video-container { width: 100%; height: 75vh; background: #000; border-radius: 12px; overflow: hidden; margin-top: 10px; display: flex; align-items: center; justify-content: center; }
-        #my-video { width: 100%; height: 100%; object-fit: contain; background: #000; }
-        .status { margin-top: 10px; font-size: 14px; color: #888; }
+        #screen-img { width: 100%; height: 100%; object-fit: contain; background: #000; }
+        .status { margin-top: 10px; font-size: 14px; color: #4ade80; }
     </style>
 </head>
 <body>
     <h2>📺 Live-трансляция экрана</h2>
-    <div id="status" class="status">Подключение к облаку...</div>
+    <div id="status" class="status">🟢 Трансляция активна</div>
     
     <div id="video-container">
-        <!-- Создаем тег видео заранее в разметке -->
-        <video id="my-video" autoplay playsinline muted></video>
+        <!-- Картинка, которая обновляется на лету -->
+        <img id="screen-img" alt="Загрузка трансляции..." />
     </div>
 
     <script>
@@ -26,43 +25,18 @@
         tg.expand();
 
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token'); 
+        const accountId = urlParams.get('account_id') || 'acc2'; // Передавай ID аккаунта в ссылке
 
-        const LIVEKIT_URL = "wss://p2p-bot-z9fxw4z4.livekit.cloud";
+        const imgElement = document.getElementById('screen-img');
 
-        async function connectLiveKit() {
-            try {
-                if (!token) {
-                    throw new Error("Токен не найден! Откройте через кнопку в боте.");
-                }
-
-                const LK = window.LivekitClient || window.Livekit || window.livekit;
-                if (!LK) {
-                    throw new Error("LiveKit SDK не загрузился!");
-                }
-
-                const room = new LK.Room();
-
-                room.on(LK.RoomEvent.TrackSubscribed, (track, publication, participant) => {
-                    document.getElementById('status').innerText = '🟢 Трансляция активна!';
-                    if (track.kind === LK.Track.Kind.VIDEO) {
-                        const videoElement = document.getElementById('my-video');
-                        // Напрямую привязываем трек к готовому тегу video
-                        track.attach(videoElement);
-                        videoElement.play().catch(err => console.log("Play error:", err));
-                    }
-                });
-
-                document.getElementById('status').innerText = '🟢 Подключение к комнате...';
-                await room.connect(LIVEKIT_URL, token);
-                document.getElementById('status').innerText = '🟢 Ожидание потока...';
-
-            } catch (e) {
-                document.getElementById('status').innerText = '❌ Ошибка: ' + e.message;
-            }
+        // Функция обновления картинки каждые 250 мс
+        function refreshScreen() {
+            const timestamp = new Date().getTime();
+            // Добавляем timestamp, чтобы браузер не кэшировал старое изображение
+            imgElement.src = `/api/screen/${accountId}?t=${timestamp}`;
         }
 
-        connectLiveKit();
+        setInterval(refreshScreen, 250);
     </script>
 </body>
 </html>
