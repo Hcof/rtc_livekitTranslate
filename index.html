@@ -16,7 +16,7 @@
     <div id="status" class="status">🟢 Трансляция активна</div>
     
     <div id="video-container">
-        <img id="screen-img" alt="Ожидание кадра..." />
+        <img id="screen-img" alt="Загрузка трансляции..." />
     </div>
 
     <script>
@@ -27,22 +27,31 @@
         const accountId = urlParams.get('account_id') || 'acc2'; 
 
         const imgElement = document.getElementById('screen-img');
-        
-        // 🟢 ВСТАВЬ СЮДА СВОЙ АКТУАЛЬНЫЙ URL ОТ NGROK
         const NGROK_URL = "https://83a3-195-200-245-189.ngrok-free.app";
 
-        function refreshScreen() {
-            const timestamp = new Date().getTime();
-            // Создаем новый объект изображения, чтобы прелоадить его перед вставкой (убирает мигание и баги в телеге)
-            const tempImg = new Image();
-            tempImg.src = `${NGROK_URL}/api/screen/${accountId}?t=${timestamp}`;
-            
-            tempImg.onload = function() {
-                imgElement.src = tempImg.src;
-            };
+        async function refreshScreen() {
+            try {
+                const timestamp = new Date().getTime();
+                const url = `${NGROK_URL}/api/screen/${accountId}?t=${timestamp}`;
+
+                // Делаем запрос с заголовком, который вырубает заглушку ngrok
+                const response = await fetch(url, {
+                    headers: {
+                        "ngrok-skip-browser-warning": "true"
+                    }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    // Создаем временную ссылку на картинку и вешаем на тег
+                    imgElement.src = URL.createObjectURL(blob);
+                }
+            } catch (err) {
+                console.log("Ошибка загрузки кадра:", err);
+            }
         }
 
-        // Интервал 500мс (0.5 сек) — оптимально для Телеграма, чтобы не перегружать WebView
+        // Обновляем каждые 500 мс
         setInterval(refreshScreen, 500);
     </script>
 </body>
