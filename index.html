@@ -26,17 +26,15 @@
         tg.expand();
 
         const urlParams = new URLSearchParams(window.location.search);
-        const accountId = urlParams.get('acc');
-        
+        const token = urlParams.get('token'); // Ловим токен прямо из ссылки от бота
 
-        const token = urlParams.get('token'); 
-
+        // 🟢 СЮДА ВПИШИ ТВОЙ LIVEKIT URL ИЗ ПАНЕЛИ УПРАВЛЕНИЯ (например: wss://your-project.livekit.cloud)
         const LIVEKIT_URL = "wss://p2p-bot-z9fxw4z4.livekit.cloud";
 
         async function connectLiveKit() {
             try {
                 if (!token) {
-                    throw new Error("Токен доступа не найден в ссылке!");
+                    throw new Error("Токен доступа не найден! Откройте трансляцию через кнопку в боте.");
                 }
 
                 document.getElementById('status').innerText = '🟢 Подключение к комнате...';
@@ -47,8 +45,9 @@
                 room.on(LiveKit.RoomEvent.TrackSubscribed, (track, publication, participant) => {
                     if (track.kind === LiveKit.Track.Kind.VIDEO) {
                         const element = track.attach();
+                        document.getElementById('video-container').innerHTML = ''; // Очищаем старые теги если были
                         document.getElementById('video-container').appendChild(element);
-                        document.getElementById('status').innerText = '🟢 Трансляция активна (LiveKit Cloud)';
+                        document.getElementById('status').innerText = '🟢 Трансляция активна';
                     }
                 });
 
