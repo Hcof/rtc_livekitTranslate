@@ -27,19 +27,21 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const accountId = urlParams.get('acc');
-        const roomName = `room_${accountId}`;
+        
+
+        const token = urlParams.get('token'); 
+
+        const LIVEKIT_URL = "wss://p2p-bot-z9fxw4z4.livekit.cloud";
 
         async function connectLiveKit() {
             try {
-                document.getElementById('status').innerText = '🔄 Запрос то доступа...';
-                
-                // 1. Запрашиваем у твоего бэкенда токен для подключения зрителя (Viewer)
-                let response = await fetch(`/api/get_livekit_token?acc=${accountId}`);
-                let data = await response.json();
-                
+                if (!token) {
+                    throw new Error("Токен доступа не найден в ссылке!");
+                }
+
                 document.getElementById('status').innerText = '🟢 Подключение к комнате...';
 
-                // 2. Подключаемся к комнате LiveKit через WebSocket SDK
+                // Подключаемся к комнате LiveKit через WebSocket SDK
                 const room = new LiveKit.Room();
                 
                 room.on(LiveKit.RoomEvent.TrackSubscribed, (track, publication, participant) => {
@@ -50,7 +52,7 @@
                     }
                 });
 
-                await room.connect(data.url, data.token);
+                await room.connect(LIVEKIT_URL, token);
 
             } catch (e) {
                 document.getElementById('status').innerText = '❌ Ошибка: ' + e.message;
