@@ -30,10 +30,14 @@
         const imgElement = document.getElementById('screen-img');
 
         // Функция обновления картинки каждые 250 мс
+        // Функция обновления картинки каждые 250 мс
         function refreshScreen() {
             const timestamp = new Date().getTime();
-            // Добавляем timestamp, чтобы браузер не кэшировал старое изображение
-            imgElement.src = `/api/screen/${accountId}?t=${timestamp}`;
+            
+            // 🟢 ВСТАВЬ СЮДА СВОЙ URL ОТ NGROK (без слэша в конце)
+            const BASE_URL = "https://4c1b-195-200-245-189.ngrok-free.app"; 
+            
+            imgElement.src = `${BASE_URL}/api/screen/${accountId}?t=${timestamp}`;
         }
 
         setInterval(refreshScreen, 250);
