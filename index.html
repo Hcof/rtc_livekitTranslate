@@ -28,35 +28,42 @@
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token'); 
 
-        // 🟢 ВПИШИ СЮДА СВОЙ LIVEKIT URL ИЗ ПАНЕЛИ УПРАВЛЕНИЯ (например: wss://your-project.livekit.cloud)
+        // 🟢 Твой URL LiveKit Cloud
         const LIVEKIT_URL = "wss://p2p-bot-z9fxw4z4.livekit.cloud";
 
         async function connectLiveKit() {
             try {
                 if (!token) {
-                    throw new Error("Токен доступа не найден! Откройте трансляцию через кнопку в боте.");
+                    throw new Error("Токен не найден! Откройте через кнопку в боте.");
                 }
 
-                document.getElementById('status').innerText = '🟢 Подключение к комнате...';
+                document.getElementById('status').innerText = '🔄 Инициализация клиента...';
 
-                // Ищем объект LiveKit в глобальном контексте браузера
                 const LK = window.LivekitClient || window.Livekit || window.livekit;
                 if (!LK) {
-                    throw new Error("LiveKit SDK не загрузился из CDN!");
+                    throw new Error("LiveKit SDK не загрузился!");
                 }
 
                 const room = new LK.Room();
+
+                // Логируем все события для отладки прямо на экране
+                room.on(LK.RoomEvent.ConnectionStateChanged, (state) => {
+                    document.getElementById('status').innerText = `🔌 Статус: ${state}`;
+                });
                 
                 room.on(LK.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+                    document.getElementById('status').innerText = '🟢 Трек получен!';
                     if (track.kind === LK.Track.Kind.VIDEO) {
                         const element = track.attach();
                         document.getElementById('video-container').innerHTML = ''; 
                         document.getElementById('video-container').appendChild(element);
-                        document.getElementById('status').innerText = '🟢 Трансляция активна';
+                        document.getElementById('status').innerText = '🟢 Трансляция активна!';
                     }
                 });
 
+                document.getElementById('status').innerText = '🟢 Соединение с облаком...';
                 await room.connect(LIVEKIT_URL, token);
+                document.getElementById('status').innerText = '🟢 Ожидание потока от воркера...';
 
             } catch (e) {
                 document.getElementById('status').innerText = '❌ Ошибка: ' + e.message;
