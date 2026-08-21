@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <title>Трансляция экрана аккаунта</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключаем официальный клиентский LiveKit SDK через CDN -->
     <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
     <style>
         body { background: #0f0f0f; color: #fff; font-family: sans-serif; text-align: center; margin: 0; padding: 15px; }
         #video-container { width: 100%; height: 75vh; background: #000; border-radius: 12px; overflow: hidden; margin-top: 10px; display: flex; align-items: center; justify-content: center; }
-        video { width: 100%; height: 100%; object-fit: contain; }
+        #my-video { width: 100%; height: 100%; object-fit: contain; background: #000; }
         .status { margin-top: 10px; font-size: 14px; color: #888; }
     </style>
 </head>
@@ -18,7 +17,8 @@
     <div id="status" class="status">Подключение к облаку...</div>
     
     <div id="video-container">
-        <!-- Сюда LiveKit автоматически воткнет тег <video> с потоком воркера -->
+        <!-- Создаем тег видео заранее в разметке -->
+        <video id="my-video" autoplay playsinline muted></video>
     </div>
 
     <script>
@@ -28,7 +28,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token'); 
 
-        // 🟢 ВПИШИ СЮДА СВОЙ LIVEKIT URL ИЗ ПАНЕЛИ УПРАВЛЕНИЯ
         const LIVEKIT_URL = "wss://p2p-bot-z9fxw4z4.livekit.cloud";
 
         async function connectLiveKit() {
@@ -37,8 +36,6 @@
                     throw new Error("Токен не найден! Откройте через кнопку в боте.");
                 }
 
-                document.getElementById('status').innerText = '🔄 Инициализация клиента...';
-
                 const LK = window.LivekitClient || window.Livekit || window.livekit;
                 if (!LK) {
                     throw new Error("LiveKit SDK не загрузился!");
@@ -46,35 +43,19 @@
 
                 const room = new LK.Room();
 
-                room.on(LK.RoomEvent.ConnectionStateChanged, (state) => {
-                    document.getElementById('status').innerText = `🔌 Статус: ${state}`;
-                });
-                
                 room.on(LK.RoomEvent.TrackSubscribed, (track, publication, participant) => {
-                    document.getElementById('status').innerText = '🟢 Трек получен!';
+                    document.getElementById('status').innerText = '🟢 Трансляция активна!';
                     if (track.kind === LK.Track.Kind.VIDEO) {
-                        const element = track.attach();
-                        
-                        // Настраиваем видеоэлемент для принудительного воспроизведения на мобилках
-                        element.style.width = "100%";
-                        element.style.height = "100%";
-                        element.style.objectFit = "contain";
-                        element.autoplay = true;
-                        element.playsInline = true;
-                        
-                        const container = document.getElementById('video-container');
-                        container.innerHTML = ''; 
-                        container.appendChild(element);
-                        
-                        element.play().catch(err => console.log("Autoplay blocked:", err));
-                        
-                        document.getElementById('status').innerText = '🟢 Трансляция активна!';
+                        const videoElement = document.getElementById('my-video');
+                        // Напрямую привязываем трек к готовому тегу video
+                        track.attach(videoElement);
+                        videoElement.play().catch(err => console.log("Play error:", err));
                     }
                 });
 
-                document.getElementById('status').innerText = '🟢 Соединение с облаком...';
+                document.getElementById('status').innerText = '🟢 Подключение к комнате...';
                 await room.connect(LIVEKIT_URL, token);
-                document.getElementById('status').innerText = '🟢 Ожидание потока от воркера...';
+                document.getElementById('status').innerText = '🟢 Ожидание потока...';
 
             } catch (e) {
                 document.getElementById('status').innerText = '❌ Ошибка: ' + e.message;
