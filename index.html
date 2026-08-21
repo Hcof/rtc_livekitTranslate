@@ -28,7 +28,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token'); 
 
-        // 🟢 Твой URL LiveKit Cloud
+        // 🟢 ВПИШИ СЮДА СВОЙ LIVEKIT URL ИЗ ПАНЕЛИ УПРАВЛЕНИЯ
         const LIVEKIT_URL = "wss://p2p-bot-z9fxw4z4.livekit.cloud";
 
         async function connectLiveKit() {
@@ -46,7 +46,6 @@
 
                 const room = new LK.Room();
 
-                // Логируем все события для отладки прямо на экране
                 room.on(LK.RoomEvent.ConnectionStateChanged, (state) => {
                     document.getElementById('status').innerText = `🔌 Статус: ${state}`;
                 });
@@ -55,8 +54,20 @@
                     document.getElementById('status').innerText = '🟢 Трек получен!';
                     if (track.kind === LK.Track.Kind.VIDEO) {
                         const element = track.attach();
-                        document.getElementById('video-container').innerHTML = ''; 
-                        document.getElementById('video-container').appendChild(element);
+                        
+                        // Настраиваем видеоэлемент для принудительного воспроизведения на мобилках
+                        element.style.width = "100%";
+                        element.style.height = "100%";
+                        element.style.objectFit = "contain";
+                        element.autoplay = true;
+                        element.playsInline = true;
+                        
+                        const container = document.getElementById('video-container');
+                        container.innerHTML = ''; 
+                        container.appendChild(element);
+                        
+                        element.play().catch(err => console.log("Autoplay blocked:", err));
+                        
                         document.getElementById('status').innerText = '🟢 Трансляция активна!';
                     }
                 });
