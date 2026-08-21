@@ -39,13 +39,14 @@
 
                 document.getElementById('status').innerText = '🟢 Подключение к комнате...';
 
-                // Подключаемся к комнате LiveKit через WebSocket SDK
-                const room = new LiveKit.Room();
+                // Используем правильное имя глобального объекта из CDN-пакета (livekit с маленькой буквы)
+                const RoomClass = window.Livekit ? window.Livekit.Room : livekit.Room;
+                const room = new RoomClass();
                 
-                room.on(LiveKit.RoomEvent.TrackSubscribed, (track, publication, participant) => {
-                    if (track.kind === LiveKit.Track.Kind.VIDEO) {
+                room.on(Livekit.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+                    if (track.kind === Livekit.Track.Kind.VIDEO) {
                         const element = track.attach();
-                        document.getElementById('video-container').innerHTML = ''; // Очищаем старые теги если были
+                        document.getElementById('video-container').innerHTML = ''; 
                         document.getElementById('video-container').appendChild(element);
                         document.getElementById('status').innerText = '🟢 Трансляция активна';
                     }
