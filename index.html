@@ -16,8 +16,7 @@
     <div id="status" class="status">🟢 Трансляция активна</div>
     
     <div id="video-container">
-        <!-- Картинка, которая обновляется на лету -->
-        <img id="screen-img" alt="Загрузка трансляции..." />
+        <img id="screen-img" alt="Ожидание кадра..." />
     </div>
 
     <script>
@@ -25,22 +24,26 @@
         tg.expand();
 
         const urlParams = new URLSearchParams(window.location.search);
-        const accountId = urlParams.get('account_id') || 'acc2'; // Передавай ID аккаунта в ссылке
+        const accountId = urlParams.get('account_id') || 'acc2'; 
 
         const imgElement = document.getElementById('screen-img');
+        
+        // 🟢 ВСТАВЬ СЮДА СВОЙ АКТУАЛЬНЫЙ URL ОТ NGROK
+        const NGROK_URL = "https://83a3-195-200-245-189.ngrok-free.app";
 
-        // Функция обновления картинки каждые 250 мс
-        // Функция обновления картинки каждые 250 мс
         function refreshScreen() {
             const timestamp = new Date().getTime();
+            // Создаем новый объект изображения, чтобы прелоадить его перед вставкой (убирает мигание и баги в телеге)
+            const tempImg = new Image();
+            tempImg.src = `${NGROK_URL}/api/screen/${accountId}?t=${timestamp}`;
             
-            // 🟢 ВСТАВЬ СЮДА СВОЙ URL ОТ NGROK (без слэша в конце)
-            const BASE_URL = "https://e5c5-195-200-245-189.ngrok-free.app"; 
-            
-            imgElement.src = `${BASE_URL}/api/screen/${accountId}?t=${timestamp}`;
+            tempImg.onload = function() {
+                imgElement.src = tempImg.src;
+            };
         }
 
-        setInterval(refreshScreen, 250);
+        // Интервал 500мс (0.5 сек) — оптимально для Телеграма, чтобы не перегружать WebView
+        setInterval(refreshScreen, 500);
     </script>
 </body>
 </html>
